@@ -13,4 +13,10 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-.env
+*.env
+project/db-data
+authentication-service/dist
+broker-service/dist
+transaction-service/dist
+listener-service/dist
+*.DS_Store

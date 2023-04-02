@@ -1,20 +1,52 @@
 version: "3.7"
 
 services:
-  app:
-    container_name: "kendi-api"
-    build: "./"
+  broker-service:
+    build:
+      context: ./broker-service
+      dockerfile: ./broker-service.dockerfile
+    restart: always
     ports:
       - 3001:3001
+    deploy:
+      mode: replicated
+      replicas: 1
     env_file:
-      - .env
+      - ./broker-service/.env
     networks:
       - alpha
     depends_on:
       - postgres
 
+  authentication-service:
+    build:
+      context: ./authentication-service
+      dockerfile: ./authentication-service.dockerfile
+    restart: always
+    expose:
+      - 3002
+    networks:
+      - alpha
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - ./authentication-service/.env
+    depends_on:
+      - broker-service
+
+  listener-service:
+    build:
+      context: ./listener-service
+      dockerfile: ./listener-service.dockerfile
+    restart: always
+    networks:
+      - alpha
+    deploy:
+      mode: replicated
+      replicas: 1
+
   postgres:
-    container_name: postgress
     image: "postgres:12.2-alpine"
     ports:
       - 5432:5432
@@ -24,5 +56,21 @@ services:
       POSTGRES_DB: kendi_db
     networks:
       - alpha
+    volumes:
+      - ./project/db-data/postgres/:/var/lib/postgresql/data/
+
+  rabbitmq:
+    image: "rabbitmq:3.11-alpine"
+    ports:
+      - 5672:5672
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: kendi_db
+    networks:
+      - alpha
+    volumes:
+      - ./project/db-data/rabbitmq/:/var/lib/rabbitmq
+
 networks:
   alpha:

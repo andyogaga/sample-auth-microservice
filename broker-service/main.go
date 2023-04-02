@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"kendi-api/internal/repository"
 	"log"
 	"os"
 
@@ -10,11 +9,11 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting the server")
-	_, err := repository.InitiatePostgresDatabase()
-	if err != nil {
-		log.Fatal("Encountered error connecting to postgres database")
-	}
+	fmt.Println("Starting the broker service")
+	// _, err := repository.InitiatePostgresDatabase()
+	// if err != nil {
+	// 	log.Fatal("Encountered error connecting to postgres database")
+	// }
 	app := fiber.New()
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Welcome to the Kendi server")
