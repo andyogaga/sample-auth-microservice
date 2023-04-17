@@ -72,8 +72,8 @@ func (consumer *Consumer) Listen(topics []string) error {
 	go func() {
 		for d := range messages {
 			var payload Payload
-
 			_ = json.Unmarshal(d.Body, &payload)
+
 			go handlePayload(payload)
 		}
 	}()
@@ -107,7 +107,6 @@ func handlePayload(payload Payload) {
 }
 
 func logEvent(entry Payload) error {
-	fmt.Println("I have received something from rabbitMQ")
-	fmt.Print(entry.Name, entry.Data)
+
 	return nil
 }

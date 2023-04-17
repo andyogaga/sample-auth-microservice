@@ -8,16 +8,19 @@ import (
 	"gorm.io/gorm"
 )
 
-type config struct {
-	host     string
-	database string
-	port     string
-	driver   string
-	user     string
-	password string
+type DAO interface {
+	NewWalletQuery() WalletsQuery
 }
 
-func InitiatePostgresDatabase() (*gorm.DB, error) {
+var PostresDB *gorm.DB
+
+type dao struct{}
+
+func GetDB() *gorm.DB {
+	return PostresDB
+}
+
+func InitiatePostgresDatabase() (*dao, error) {
 	fmt.Println("Setting up to connect to database")
 	postgresHost := os.Getenv("POSTGRES_HOST")
 	postgresPort := os.Getenv("POSTGRES_PORT")
@@ -28,9 +31,14 @@ func InitiatePostgresDatabase() (*gorm.DB, error) {
 	// Starting a database
 	fmt.Println("Starting postgres database")
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", postgresHost, postgresPort, postgresUser, postgresDatabaseName, postgresPassword)
-	db, err := gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
+	var err error
+	PostresDB, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
-	return db, nil
+	return &dao{}, nil
+}
+
+func (d *dao) NewWalletQuery() WalletsQuery {
+	return &walletsQuery{}
 }
