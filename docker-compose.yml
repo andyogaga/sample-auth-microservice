@@ -18,10 +18,10 @@ services:
     depends_on:
       - postgres
 
-  authentication-service:
+  accounts-service:
     build:
-      context: ./authentication-service
-      dockerfile: ./authentication-service.dockerfile
+      context: ./accounts-service
+      dockerfile: ./accounts-service.dockerfile
     restart: always
     expose:
       - 3002
@@ -31,7 +31,7 @@ services:
       mode: replicated
       replicas: 1
     env_file:
-      - ./authentication-service/.env
+      - ./accounts-service/.env
     depends_on:
       - broker-service
 
@@ -53,7 +53,7 @@ services:
     environment:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
-      POSTGRES_DB: kendi_db
+      POSTGRES_DB: doow_db
     networks:
       - alpha
     volumes:
@@ -62,11 +62,10 @@ services:
   rabbitmq:
     image: "rabbitmq:3.11-alpine"
     ports:
-      - 5672:5672
-    environment:
-      POSTGRES_USER: dev
-      POSTGRES_PASSWORD: dev
-      POSTGRES_DB: kendi_db
+      # The standard AMQP protocol port
+      - "5672:5672"
+      # HTTP management UI
+      - "15672:15672"
     networks:
       - alpha
     volumes:

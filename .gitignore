@@ -15,8 +15,7 @@
 # vendor/
 *.env
 project/db-data
-authentication-service/dist
+accounts-service/dist
 broker-service/dist
-transaction-service/dist
 listener-service/dist
 *.DS_Store

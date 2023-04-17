@@ -1,5 +1,5 @@
-TRANSACTIONS_BINARY=transactionsApp
-AUTHENTICATION_BINARY=authenticationApp
+
+ACCOUNTS_BINARY=accountsApp
 BROKER_BINARY=brokerApp
 LISTENER_BINARY=listenerApp
 
@@ -10,7 +10,7 @@ up:
 	@echo "Docker images started!"
 
 ## up_build: stops docker-compose (if running), builds all projects and starts docker compose
-up_build: build_broker build_authentication build_listener
+up_build: build_broker build_accounts build_listener
 	@echo "Stopping docker images (if running...)"
 	docker-compose down
 	@echo "Building (when required) and starting docker images..."
@@ -29,10 +29,10 @@ build_broker:
 	cd ./broker-service && env GOOS=linux CGO_ENABLED=0 go build -o ./dist/${BROKER_BINARY} ./main.go
 	@echo "Done!"
 
-## build_authentication: builds the authentication binary
-build_authentication:
-	@echo "Building authentication binary..."
-	cd ./authentication-service && env CGO_ENABLED=0 go build -o ./dist/${AUTHENTICATION_BINARY} ./main.go
+## build_accounts: builds the accounts binary
+build_accounts:
+	@echo "Building accounts binary..."
+	cd ./accounts-service && env CGO_ENABLED=0 go build -o ./dist/${ACCOUNTS_BINARY} ./main.go
 	@echo "Done!"
 
 ## build_listener: builds the listener binary
@@ -41,8 +41,3 @@ build_listener:
 	cd ./listener-service && env CGO_ENABLED=0 go build -o ./dist/${LISTENER_BINARY} ./main.go
 	@echo "Done!"
 
-## build_transactions: builds the transactions binary
-build_transactions:
-	@echo "Building transactions binary..."
-	cd ./transactions-service && env CGO_ENABLED=0 go build -o ./dist/${TRANSACTIONS_BINARY} ./main.go
-	@echo "Done!"
