@@ -1,0 +1,8 @@
+# stages:
+#   - test:
+#       script:
+#         - <command-to-run-tests>
+build:
+  script:
+    - make up
+  # needs: ["test"]

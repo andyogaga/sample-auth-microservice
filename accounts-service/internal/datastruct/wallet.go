@@ -18,7 +18,7 @@ type Wallet struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-func MigreateWallets(db *gorm.DB) error {
+func MigrateWallets(db *gorm.DB) error {
 	err := db.AutoMigrate(&Wallet{})
 	return err
 }
