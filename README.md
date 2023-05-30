@@ -1,6 +1,6 @@
-# doow-server
+# kendi-server
 
-server for doow
+server for kendi
 
 ## Architecture
 

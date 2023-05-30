@@ -13,6 +13,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
+	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -45,7 +46,7 @@ func main() {
 	}
 	app.Use(recover.New())
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Welcome to the Doow server")
+		return c.SendString("Welcome to the kendi server")
 	})
 	app.Post("/post-to-rabbitmq", func(c *fiber.Ctx) error {
 		log.Println("posting to rabbitmq")
@@ -55,6 +56,10 @@ func main() {
 		})
 		return nil
 	})
+
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+	}
 	server_port := os.Getenv("PORT")
 	app.Listen(fmt.Sprintf(":%s", server_port))
 	log.Println("Listening on port =", server_port)

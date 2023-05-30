@@ -7,7 +7,7 @@ services:
       dockerfile: ./broker-service.dockerfile
     restart: always
     ports:
-      - 3001:3001
+      - "3001:3001"
     deploy:
       mode: replicated
       replicas: 1
@@ -23,8 +23,6 @@ services:
       context: ./accounts-service
       dockerfile: ./accounts-service.dockerfile
     restart: always
-    expose:
-      - 3002
     networks:
       - alpha
     deploy:
@@ -45,6 +43,8 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    depends_on:
+      - broker-service
 
   postgres:
     image: "postgres:12.2-alpine"
@@ -53,7 +53,7 @@ services:
     environment:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
-      POSTGRES_DB: doow_db
+      POSTGRES_DB: kendi_db
     networks:
       - alpha
     volumes:

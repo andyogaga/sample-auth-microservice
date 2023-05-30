@@ -1,9 +1,7 @@
-FROM golang:1.18 AS base
+FROM alpine:latest
 
-WORKDIR /app
+RUN mkdir /app
 
-COPY . .
+COPY /dist/listenerApp /app
 
-EXPOSE 3001
-
-CMD go run main.go
+CMD ["app/listenerApp"]

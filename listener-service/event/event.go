@@ -18,11 +18,11 @@ func declareExchange(ch *amqp.Channel) error {
 
 func declareRandomQueue(ch *amqp.Channel) (amqp.Queue, error) {
 	return ch.QueueDeclare(
-		"DoowQueue", // name?
-		false,       // durable?
-		false,       // delete when unused?
-		true,        // exclusive?
-		false,       // no-wait?
-		nil,         // arguments?
+		"KendiQueue", // name?
+		false,        // durable?
+		false,        // delete when unused?
+		true,         // exclusive?
+		false,        // no-wait?
+		nil,          // arguments?
 	)
 }

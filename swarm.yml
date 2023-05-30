@@ -1,0 +1,61 @@
+version: "3"
+
+services:
+  caddy-service:
+    image: andyogaga/caddy-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+
+  broker-service:
+    image: andyogaga/kendi-broker-service:1.0.0
+    ports:
+      - "3001:3001"
+    env_file:
+      - ./broker-service/.env
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  listener-service:
+    image: andyogaga/listener-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  accounts-service:
+    image: andyogaga/accounts-service:1.0.0
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - ./accounts-service/.env
+
+  postgres:
+    image: "postgres:14.2-alpine"
+    ports:
+      - 5432:5432
+    deploy:
+      mode: global
+    volumes:
+      - ./project/db-data/postgres/:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: kendi_db
+
+  rabbitmq:
+    image: "rabbitmq:3.11-alpine"
+    deploy:
+      mode: global
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:

@@ -1,6 +1,10 @@
 
-FROM golang:1.18 AS base
-WORKDIR /app
-COPY . .
+FROM alpine:latest
+
+RUN mkdir /app
+
+COPY /dist/accountsApp /app
+
 EXPOSE 3001
-CMD go run main.go
+
+CMD ["app/accountsApp"]
