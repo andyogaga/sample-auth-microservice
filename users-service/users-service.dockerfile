@@ -12,12 +12,9 @@
 # # Use the ARG value to set environment variables during build time
 # ENV $(cat $ENV_FILE | xargs)
 
-# COPY /dist/accountsApp /app
+# COPY /dist/usersApp /app
 
-# EXPOSE 3001
-
-# CMD ["app/accountsApp"]
-
+# CMD ["app/usersApp"]
 
 FROM golang:1.18 AS base
 WORKDIR /app

@@ -3,8 +3,8 @@ package services
 import (
 	"log"
 
-	"accounts-service/internal/datastruct"
-	"accounts-service/internal/repository"
+	"accounts-service/internals/datastruct"
+	"accounts-service/internals/repository"
 )
 
 type WalletService interface {

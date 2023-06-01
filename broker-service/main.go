@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,12 +10,15 @@ import (
 	"time"
 
 	"broker-service/internals/event"
+	requests "broker-service/internals/proto"
 	"broker-service/internals/utils"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Config struct {
@@ -31,6 +35,9 @@ var config Config
 
 func main() {
 	fmt.Println("Starting the broker service")
+	if err := godotenv.Load(); err != nil {
+		log.Fatalf("Error loading .env file: %s", err)
+	}
 	rabbitConn, err := connect()
 	if err != nil {
 		log.Print(err)
@@ -57,12 +64,38 @@ func main() {
 		return nil
 	})
 
-	if err := godotenv.Load(); err != nil {
-		log.Fatalf("Error loading .env file: %s", err)
-	}
+	app.Post("/post-to-grpc", func(c *fiber.Ctx) error {
+		response, err := UserRequestsViaGRPC("users-service")
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).SendString("Bad Request")
+		}
+		return c.JSON(response)
+	})
+
 	server_port := os.Getenv("PORT")
 	app.Listen(fmt.Sprintf(":%s", server_port))
 	log.Println("Listening on port =", server_port)
+}
+
+func UserRequestsViaGRPC(service string) (*requests.CreateUserResponse, error) {
+
+	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", service, "50002"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	client := requests.NewUserServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	req := &requests.CreateUserRequest{
+		Phone:   "07030894179",
+		Country: "NGN",
+	}
+
+	response, err := client.CreateUser(ctx, req)
+	return response, err
 }
 
 func connect() (*amqp.Connection, error) {

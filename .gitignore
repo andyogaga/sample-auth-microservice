@@ -18,4 +18,5 @@ project/db-data
 accounts-service/dist
 broker-service/dist
 listener-service/dist
+users-service/dist
 *.DS_Store

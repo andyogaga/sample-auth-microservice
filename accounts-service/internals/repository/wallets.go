@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"accounts-service/internal/datastruct"
+	"accounts-service/internals/datastruct"
 	"fmt"
 )
 

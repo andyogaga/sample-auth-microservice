@@ -4,7 +4,7 @@ import (
 	context "context"
 	"fmt"
 
-	services "accounts-service/internal/services"
+	services "accounts-service/internals/services"
 )
 
 var walletService services.WalletService

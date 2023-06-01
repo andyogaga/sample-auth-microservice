@@ -39,5 +39,7 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.2
 - `cd` to the paths of the `.proto` file and run
 
 ```sh
-protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative auth.proto
+cd proto
+protoc --go_out=../users-service/internals/proto --go_opt=paths=source_relative --go-grpc_out=../users-service/internals/proto --go-grpc_opt=paths=source_relative users.proto
+protoc --go_out=../broker-service/internals/proto --go_opt=paths=source_relative --go-grpc_out=../broker-service/internals/proto --go-grpc_opt=paths=source_relative users.proto
 ```

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 
-	"accounts-service/internal/datastruct"
-	requests "accounts-service/internal/proto"
-	"accounts-service/internal/repository"
-	services "accounts-service/internal/services"
+	"accounts-service/internals/datastruct"
+	requests "accounts-service/internals/proto"
+	"accounts-service/internals/repository"
+	services "accounts-service/internals/services"
 )
 
 func main() {

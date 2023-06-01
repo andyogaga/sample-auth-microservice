@@ -5,7 +5,7 @@ services:
     build:
       context: ./broker-service
       dockerfile: ./broker-service.dockerfile
-    restart: always
+    # restart: always
     ports:
       - "3001:3001"
     deploy:
@@ -17,12 +17,13 @@ services:
       - alpha
     depends_on:
       - postgres
+      - rabbitmq
 
   accounts-service:
     build:
       context: ./accounts-service
       dockerfile: ./accounts-service.dockerfile
-    restart: always
+    # restart: always
     networks:
       - alpha
     deploy:
@@ -32,12 +33,13 @@ services:
       - ./accounts-service/.env
     depends_on:
       - broker-service
+      - postgres
 
   listener-service:
     build:
       context: ./listener-service
       dockerfile: ./listener-service.dockerfile
-    restart: always
+    # restart: always
     networks:
       - alpha
     deploy:
@@ -46,14 +48,30 @@ services:
     depends_on:
       - broker-service
 
+  users-service:
+    build:
+      context: ./users-service
+      dockerfile: ./users-service.dockerfile
+    # restart: always
+    networks:
+      - alpha
+    deploy:
+      mode: replicated
+      replicas: 1
+    env_file:
+      - ./users-service/.env
+    depends_on:
+      - broker-service
+      - postgres
+
   postgres:
-    image: "postgres:12.2-alpine"
+    image: "postgres:15.3-alpine"
     ports:
       - 5432:5432
     environment:
       POSTGRES_USER: dev
       POSTGRES_PASSWORD: dev
-      POSTGRES_DB: kendi_db
+      # POSTGRES_DB: kendi_db
     networks:
       - alpha
     volumes:

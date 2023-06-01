@@ -4,4 +4,5 @@ use (
 	./accounts-service
 	./broker-service
 	./listener-service
+	./users-service
 )
