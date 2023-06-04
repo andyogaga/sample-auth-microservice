@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
+	controller "users-service/internals/controllers"
 	"users-service/internals/datastruct"
-	requests "users-service/internals/proto"
 	"users-service/internals/repository"
 	services "users-service/internals/services"
 
@@ -27,6 +27,6 @@ func main() {
 	datastruct.MigrateUsers(db)
 
 	usersService := services.NewUserService(dao)
-	requests.SetupService(&usersService)
-	requests.SetupGRPCRequestsListener()
+	controller.SetupService(&usersService)
+	controller.SetupGRPCRequestsListener()
 }

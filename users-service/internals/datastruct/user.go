@@ -1,21 +1,29 @@
 package datastruct
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 )
 
 const UserTableName = "users"
 
 type User struct {
-	ID        uint64    `gorm:"primaryKey"`
-	UserId    string    `json:"userId"`
-	Country   string    `json:"country"`
-	Valid     bool      `json:"valid"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	gorm.Model
+	ID        uint64 `gorm:"primaryKey"`
+	Phone     string `json:"phone" gorm:"unique"`
+	Email     string `json:"email" gorm:"unique"`
+	UserId    string `json:"userId" gorm:"unique"`
+	Verified  bool   `json:"verified"`
+	Role      Role   `json:"role"`
+	ProfileId string
+	Profile   Profile `gorm:"foreignKey:ProfileId"`
 }
+
+type Role string
+
+const (
+	ADMIN Role = "admin"
+	USER  Role = "user"
+)
 
 func MigrateUsers(db *gorm.DB) error {
 	err := db.AutoMigrate(&User{})

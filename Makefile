@@ -34,23 +34,23 @@ build_proto:
 ## build_broker: builds the broker binary as a linux executable
 build_broker:
 	@echo "Building core binary..."
-	cd ./broker-service && env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ./dist/${BROKER_BINARY} ./main.go
+	cd ./broker-service && go mod download && env GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o ./dist/${BROKER_BINARY} ./main.go
 	@echo "Done!"
 
 ## build_accounts: builds the accounts binary
 build_accounts:
 	@echo "Building accounts binary..."
-	cd ./accounts-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./dist/${ACCOUNTS_BINARY} ./main.go
+	cd ./accounts-service && go mod download && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./dist/${ACCOUNTS_BINARY} ./main.go
 	@echo "Done!"
 
 ## build_listener: builds the listener binary
 build_listener:
 	@echo "Building listener binary..."
-	cd ./listener-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./dist/${LISTENER_BINARY} ./main.go
+	cd ./listener-service && go mod download && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./dist/${LISTENER_BINARY} ./main.go
 	@echo "Done!"
 
 ## build_users: builds the users binary
 build_users:
 	@echo "Building users binary..."
-	cd ./users-service && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./dist/${USERS_BINARY} ./main.go
+	cd ./users-service && go mod download && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./dist/${USERS_BINARY} ./main.go
 	@echo "Done!"
