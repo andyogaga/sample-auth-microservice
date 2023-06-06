@@ -4,15 +4,38 @@ package requests;
 
 option go_package = "/requests";
 
-message CreateUserRequest {
-    string phone = 1;
-    string country = 2;
+message InitializeUserRequest {
+    string Phone = 1;
+    string Country = 2;
 }
 
-message CreateUserResponse {
-    string message = 1;
+message InitializeUserResponse {
+    string Message = 1;
+}
+
+message RegisterUserRequest {
+    string Phone = 1;
+    string Country = 2;
+    string Email = 3;
+    string Password = 4;
+}
+
+message RegisterUserResponse {
+    string Message = 1;
+}
+
+message LoginUserRequest {
+    string Phone = 1;
+    string Email = 2;
+    string Password = 3;
+}
+
+message LoginUserResponse {
+    string Message = 1;
 }
 
 service UserService {
-    rpc CreateUser(CreateUserRequest) returns (CreateUserResponse);
+    rpc InitializeUser(InitializeUserRequest) returns (InitializeUserResponse);
+    rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse);
+    rpc LoginUser(LoginUserRequest) returns (LoginUserResponse);
 }

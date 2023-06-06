@@ -32,10 +32,10 @@ func ConnectToRabbitMQ() (*amqp.Connection, error) {
 			return nil, err
 		}
 		backOff = time.Duration(math.Pow(float64(counts), 2)) * time.Second
-		fmt.Printf("Backing off to try RabbitMQ again in %d seconds", backOff)
+		fmt.Printf("Backing off to try RabbitMQ again in %d seconds\n", backOff)
 		time.Sleep(backOff)
 		continue
 	}
-	log.Printf("Listening for and consuming RabbitMQ messages on: %s", url)
+	log.Printf("Listening for and consuming RabbitMQ messages on: %s\n", url)
 	return connection, nil
 }

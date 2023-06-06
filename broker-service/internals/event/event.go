@@ -8,6 +8,7 @@ import (
 	"time"
 
 	constants "broker-service/internals/constants"
+	requests "broker-service/internals/proto"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 )
@@ -22,10 +23,14 @@ const (
 	REQUEST MessageName = "request"
 )
 
+type CustomData interface {
+	requests.InitializeUserRequest | requests.RegisterUserRequest
+}
+
 type Payload struct {
 	Name    MessageName        `json:"name"`
 	Service constants.Services `json:"service"`
-	Data    interface{}        `json:"data"`
+	Data    any                `json:"data"`
 }
 
 type Config struct {
@@ -91,7 +96,7 @@ func ConnectToRabbitMQ() (*amqp.Connection, error) {
 			return nil, err
 		}
 		backOff = time.Duration(math.Pow(float64(counts), 2)) * time.Second
-		fmt.Printf("Backing off to try RabbitMQ again in %d seconds", backOff)
+		fmt.Printf("Backing off to try RabbitMQ again in %d seconds\n", backOff)
 		time.Sleep(backOff)
 		continue
 	}

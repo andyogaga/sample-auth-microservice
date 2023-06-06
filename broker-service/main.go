@@ -10,9 +10,12 @@ import (
 	constants "broker-service/internals/constants"
 	events "broker-service/internals/event"
 	requests "broker-service/internals/proto"
-	utils "broker-service/internals/utils"
+	"broker-service/internals/utils"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/idempotency"
+
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/joho/godotenv"
 	"google.golang.org/grpc"
@@ -33,9 +36,13 @@ func main() {
 
 	app := fiber.New()
 
-	app.Use(recover.New())
-
 	// middlewares
+	app.Use(idempotency.New())
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: "https://gofiber.io, https://gofiber.net",
+		AllowHeaders: "Origin, Content-Type, Accept",
+	}))
+	app.Use(recover.New())
 	app.Use(func(c *fiber.Ctx) error {
 		utils.LogRequest(c, config)
 		return c.Next()
@@ -52,18 +59,20 @@ func main() {
 
 	app.Post("/user/init", func(c *fiber.Ctx) error {
 		// Do Validations
-		client := UserRequestsViaGRPC(constants.USERS_SERVICE)
-		req := &requests.CreateUserRequest{
-			Phone:   "07030894179",
-			Country: "NGN",
-		}
-
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		defer cancel()
-		response, err := client.CreateUser(ctx, req)
+		client, conn, err := UserRequestsViaGRPC(constants.USERS_SERVICE)
 		if err != nil {
-			e := fmt.Sprintf("Error creating user: %s", err)
-			return c.Status(fiber.StatusInternalServerError).SendString(e)
+			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		}
+		defer conn.Close()
+		var req requests.InitializeUserRequest
+		if err := c.BodyParser(&req); err != nil {
+			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
+		}
+		response, err := client.InitializeUser(ctx, &req)
+		if err != nil {
+			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
 		}
 		return c.JSON(response)
 	})
@@ -73,15 +82,14 @@ func main() {
 	log.Println("Listening on port =", server_port)
 }
 
-func UserRequestsViaGRPC(service constants.Services) requests.UserServiceClient {
+func UserRequestsViaGRPC(service constants.Services) (requests.UserServiceClient, *grpc.ClientConn, error) {
 
 	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", service, "50002"), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
-		log.Fatal(err)
+		return nil, nil, err
 	}
-	defer conn.Close()
 
 	client := requests.NewUserServiceClient(conn)
 
-	return client
+	return client, conn, nil
 }

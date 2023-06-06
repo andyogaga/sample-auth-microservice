@@ -1,8 +1,6 @@
 package services
 
 import (
-	"log"
-
 	"accounts-service/internals/datastruct"
 	"accounts-service/internals/repository"
 )
@@ -26,7 +24,6 @@ func (w *walletService) GetWallet(walletID uint64) (*datastruct.Wallet, error) {
 
 	wallet, err = w.dao.NewWalletQuery().GetWalletById(walletID)
 	if err != nil {
-		log.Printf("user isn't authorized %v", err)
 		return nil, err
 	}
 	return wallet, nil

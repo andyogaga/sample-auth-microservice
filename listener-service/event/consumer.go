@@ -102,7 +102,7 @@ func (consumer *Consumer) Listen() error {
 		var payload Payload
 		err = json.Unmarshal(msg.Body, &payload)
 		if err != nil {
-			fmt.Printf("Error unmarshalling: %v", err)
+			return err
 		}
 		go handlePayload(payload)
 	}

@@ -2,7 +2,6 @@ package requests
 
 import (
 	context "context"
-	"fmt"
 
 	services "accounts-service/internals/services"
 )
@@ -18,7 +17,6 @@ type WalletsServer struct {
 }
 
 func (c *WalletsServer) CreateWallet(ctx context.Context, req *CreateWalletRequest) (*CreateWalletResponse, error) {
-	fmt.Println(req)
 	walletService.GetWallet(123)
 	return nil, nil
 }

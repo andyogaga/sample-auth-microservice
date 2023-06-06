@@ -1,7 +1,6 @@
 package dto
 
-type CreateUser struct {
+type InitializeUser struct {
 	Country string `json:"country"`
 	Phone   string `json:"phone"`
-	Email   string `json:"email"`
 }
