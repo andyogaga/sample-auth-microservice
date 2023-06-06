@@ -30,6 +30,16 @@ func (u *userService) GetUser(userID string) (*datastruct.User, error) {
 	return user, nil
 }
 
+/**
+Create RegisterUser Service
+
+check if email exists
+check if phone exists
+
+if not
+	create user by u.dao.NewUserQuery().RegisterUser(user)
+*/
+
 func (u *userService) InitializeUser(user *dto.InitializeUser) (*datastruct.User, error) {
 	newUser, err := u.dao.NewUserQuery().InitializeUser(user)
 	if err != nil {

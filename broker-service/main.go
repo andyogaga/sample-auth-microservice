@@ -51,12 +51,6 @@ func main() {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Welcome to the kendi server")
 	})
-	app.Post("/post-to-rabbitmq", func(c *fiber.Ctx) error {
-
-		c.SendString("I have sent the message")
-		return nil
-	})
-
 	app.Post("/user/init", func(c *fiber.Ctx) error {
 		// Do Validations
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
