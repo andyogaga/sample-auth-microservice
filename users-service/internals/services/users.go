@@ -43,7 +43,6 @@ if not
 func (u *userService) InitializeUser(user *dto.InitializeUser) (*datastruct.User, error) {
 	newUser, err := u.dao.NewUserQuery().InitializeUser(user)
 	if err != nil {
-		log.Printf("user registration failed: %v", err)
 		return nil, err
 	}
 	return newUser, nil

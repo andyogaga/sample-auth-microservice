@@ -8,13 +8,13 @@ const UserTableName = "users"
 
 type User struct {
 	gorm.Model
-	UserId   string  `json:"userId" gorm:"unique,primaryKey"`
-	Phone    string  `json:"phone" gorm:"unique"`
-	Email    *string `json:"email" gorm:"unique,default:null"`
-	Verified bool    `json:"verified"`
-	Role     Role    `json:"role" gorm:"default:user"`
-	// ProfileId *string
-	// Profile   Profile `gorm:"foreignKey:ProfileId"`
+	UserId    string  `json:"userId" gorm:"unique,primaryKey"`
+	Phone     string  `json:"phone" gorm:"unique"`
+	Email     *string `json:"email" gorm:"unique,default:null"`
+	Verified  bool    `json:"verified"`
+	Role      Role    `json:"role" gorm:"default:user"`
+	ProfileId *string
+	Profile   Profile `gorm:"foreignKey:ProfileId"`
 }
 
 type Role string

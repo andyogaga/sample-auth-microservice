@@ -32,10 +32,11 @@ func (u *usersQuery) InitializeUser(initUser *dto.InitializeUser) (*datastruct.U
 		}
 	}()
 	user := datastruct.User{
-		UserId:   utils.GenerateUUID(),
-		Phone:    initUser.Phone,
-		Verified: false,
-		Email:    nil,
+		UserId:    utils.GenerateUUID(),
+		Phone:     initUser.Phone,
+		Verified:  false,
+		Email:     nil,
+		ProfileId: &initUser.ProfileId,
 	}
 	result := *PostresDB.Create(&user)
 

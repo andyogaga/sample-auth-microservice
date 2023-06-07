@@ -1,28 +1,26 @@
 package services
 
 import (
-	"log"
-
 	"users-service/internals/datastruct"
+	"users-service/internals/dto"
 	"users-service/internals/repository"
 )
 
 type ProfileService interface {
-	// GetProfile(profile *dto.) (*datastruct.Profile, error)
+	CreateProfile(profile *dto.CreateProfile) (*datastruct.Profile, error)
 }
 
 type profileService struct {
 	dao repository.DAO
 }
 
-func NewProfileService(dao repository.DAO) UserService {
-	return &userService{dao: dao}
+func NewProfileService(dao repository.DAO) ProfileService {
+	return &profileService{dao: dao}
 }
 
-func (u *userService) GetProfile(profileID string) (*datastruct.User, error) {
-	user, err := u.dao.NewUserQuery().GetUserById(profileID)
+func (p *profileService) CreateProfile(profile *dto.CreateProfile) (*datastruct.Profile, error) {
+	user, err := p.dao.NewProfileQuery().CreateProfile(profile)
 	if err != nil {
-		log.Printf("user isn't authorized %v", err)
 		return nil, err
 	}
 	return user, nil

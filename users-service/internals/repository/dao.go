@@ -10,6 +10,7 @@ import (
 
 type DAO interface {
 	NewUserQuery() UsersQuery
+	NewProfileQuery() ProfilesQuery
 }
 
 var PostresDB *gorm.DB
@@ -45,4 +46,8 @@ func InitiatePostgresDatabase() (*dao, error) {
 
 func (d *dao) NewUserQuery() UsersQuery {
 	return &usersQuery{}
+}
+
+func (d *dao) NewProfileQuery() ProfilesQuery {
+	return &profilesQuery{}
 }

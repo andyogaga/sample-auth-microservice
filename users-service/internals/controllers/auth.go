@@ -3,6 +3,7 @@ package controller
 import (
 	context "context"
 
+	"users-service/internals/datastruct"
 	dto "users-service/internals/dto"
 	proto "users-service/internals/proto"
 	services "users-service/internals/services"
@@ -13,9 +14,11 @@ const (
 )
 
 var userService services.UserService
+var profileService services.ProfileService
 
-func SetupService(_userService *services.UserService) {
+func SetupService(_userService *services.UserService, _profileService *services.ProfileService) {
 	userService = *_userService
+	profileService = *_profileService
 }
 
 type UsersServer struct {
@@ -23,10 +26,15 @@ type UsersServer struct {
 }
 
 func (c *UsersServer) InitializeUser(ctx context.Context, req *proto.InitializeUserRequest) (*proto.InitializeUserResponse, error) {
-	initUser := dto.InitializeUser{Phone: req.Phone, Country: req.Country}
-	user, err := userService.InitializeUser(&initUser)
+	createdProfile, err := profileService.CreateProfile(&dto.CreateProfile{Country: datastruct.Countries(req.Country)})
 	if err != nil {
-		return &proto.InitializeUserResponse{}, err
+		return nil, err
+	}
+	initUser := dto.InitializeUser{Phone: req.Phone, ProfileId: createdProfile.ProfileId}
+	user, err := userService.InitializeUser(&initUser)
+
+	if err != nil {
+		return nil, err
 	}
 	return &proto.InitializeUserResponse{Message: user.UserId}, nil
 }
