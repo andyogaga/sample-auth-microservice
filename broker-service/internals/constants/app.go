@@ -8,3 +8,7 @@ const (
 	LISTENER_SERVICE Services = "listener-service"
 	BROKER_SERVICE   Services = "broker-service"
 )
+
+const (
+	GRPC_PORT = "50002"
+)

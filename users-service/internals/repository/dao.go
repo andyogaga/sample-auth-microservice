@@ -34,8 +34,6 @@ func InitiatePostgresDatabase() (*dao, error) {
 	fmt.Println("Starting postgres database")
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", postgresHost, postgresPort, postgresUser, postgresDatabaseName, postgresPassword)
 
-	fmt.Println(psqlInfo)
-
 	var err error
 	PostresDB, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
 	if err != nil {

@@ -24,6 +24,14 @@ down:
 	docker-compose down
 	@echo "Done!"
 
+## build_keys: builds the private and public key files for all the neccessary services
+build_keys:
+	@echo "Building key files..."
+	openssl genpkey -algorithm RSA -out broker-service/private_key.pem -pkeyopt rsa_keygen_bits:2048
+	openssl rsa -pubout -in broker-service/private_key.pem -out users-service/public_key.pem
+	openssl rsa -pubout -in broker-service/private_key.pem -out accounts-service/public_key.pem
+	@echo "Done!"
+
 ## build_proto: builds the proto grpc files for all the neccessary services
 build_proto:
 	@echo "Building proto files..."

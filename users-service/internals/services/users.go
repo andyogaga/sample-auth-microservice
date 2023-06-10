@@ -41,6 +41,7 @@ if not
 */
 
 func (u *userService) InitializeUser(user *dto.InitializeUser) (*datastruct.User, error) {
+
 	newUser, err := u.dao.NewUserQuery().InitializeUser(user)
 	if err != nil {
 		return nil, err
