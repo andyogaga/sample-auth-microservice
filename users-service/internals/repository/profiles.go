@@ -17,7 +17,7 @@ type profilesQuery struct{}
 
 func (u *profilesQuery) GetProfileById(profileID string) (*datastruct.Profile, error) {
 	profileModel := datastruct.Profile{ProfileId: profileID}
-	profile := PostresDB.Model(&datastruct.Profile{}).First(&profileModel)
+	profile := PostgresDB.Model(&datastruct.Profile{}).First(&profileModel)
 
 	if profile.Error != nil {
 		return &datastruct.Profile{}, fmt.Errorf("cannot get the profile %v", profile.Error)
@@ -36,7 +36,7 @@ func (u *profilesQuery) CreateProfile(profile *dto.CreateProfile) (*datastruct.P
 		ProfileId: utils.GenerateUUID(),
 		Country:   profile.Country,
 	}
-	result := *PostresDB.Create(&newProfile)
+	result := *PostgresDB.Create(&newProfile)
 
 	if result.Error != nil {
 		return nil, fmt.Errorf("error creating profile %v", result.Error)

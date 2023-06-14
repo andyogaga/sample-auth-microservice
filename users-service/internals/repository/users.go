@@ -2,47 +2,91 @@ package repository
 
 import (
 	"fmt"
-	"users-service/internals/datastruct"
+	datastruct "users-service/internals/datastruct"
 	dto "users-service/internals/dto"
 	utils "users-service/internals/utils"
 )
 
 type UsersQuery interface {
-	GetUserById(userId string) (*datastruct.User, error)
-	InitializeUser(*dto.InitializeUser) (*datastruct.User, error)
+	Get(*dto.GetUser) (*datastruct.User, error)
+	Create(*dto.RegisterUser) (*datastruct.User, error)
+	Update(*dto.UpdateUser) (*datastruct.User, error)
 }
+
+const (
+	PHONE   = "phone"
+	EMAIL   = "email"
+	USER_ID = "user_id"
+)
 
 type usersQuery struct{}
 
-func (u *usersQuery) GetUserById(userID string) (*datastruct.User, error) {
-	userModel := datastruct.User{UserId: userID}
-	user := PostresDB.Model(&datastruct.User{}).First(&userModel)
-
+func getUserById(userID string) (*datastruct.User, error) {
+	queryString := fmt.Sprintf("%s = ?", USER_ID)
+	var userModel datastruct.User
+	user := PostgresDB.Where(queryString, userID).First(&userModel)
 	if user.Error != nil {
-		return &datastruct.User{}, fmt.Errorf("cannot get a transaction %v", user.Error)
+		return nil, fmt.Errorf("user not found")
 	}
-
 	return &userModel, nil
 }
 
-func (u *usersQuery) InitializeUser(initUser *dto.InitializeUser) (*datastruct.User, error) {
-	defer func() {
-		if r := recover(); r != nil {
-			fmt.Printf("Error occured while saving to database: %s\n", r)
-		}
-	}()
+func getUserByEmail(email string) (*datastruct.User, error) {
+	queryString := fmt.Sprintf("%s = ?", EMAIL)
+	var userModel datastruct.User
+	user := PostgresDB.Where(queryString, email).First(&userModel)
+	if user.Error != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+	return &userModel, nil
+}
+
+func getUserByPhone(phone string) (*datastruct.User, error) {
+	queryString := fmt.Sprintf("%s = ?", PHONE)
+	var userModel datastruct.User
+	user := PostgresDB.Where(queryString, phone).First(&userModel)
+	if user.Error != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+	return &userModel, nil
+}
+
+func (u *usersQuery) Get(user *dto.GetUser) (*datastruct.User, error) {
+	if user.UserId != nil {
+		return getUserById(*user.UserId)
+	}
+	if user.Email != nil {
+		return getUserByEmail(*user.Email)
+	}
+	if user.Phone != nil {
+		return getUserByPhone(*user.Phone)
+	}
+	return nil, fmt.Errorf("user not found")
+}
+
+func (u *usersQuery) Create(initUser *dto.RegisterUser) (*datastruct.User, error) {
 	user := datastruct.User{
 		UserId:    utils.GenerateUUID(),
 		Phone:     initUser.Phone,
 		Verified:  false,
-		Email:     nil,
-		ProfileId: &initUser.ProfileId,
+		ProfileId: initUser.ProfileId,
+		Email:     *initUser.Email,
+		Role:      *initUser.Role,
 	}
-	result := *PostresDB.Create(&user)
+	result := PostgresDB.Create(&user)
 
 	if result.Error != nil {
-		return nil, fmt.Errorf("error creating user %v", result.Error)
+		return nil, fmt.Errorf("error creating user")
 	}
 
 	return &user, nil
+}
+
+func (u *usersQuery) Update(user *dto.UpdateUser) (*datastruct.User, error) {
+	updatedUser := datastruct.User{UserId: *user.UserId}
+	result := PostgresDB.Save(*user).First(&updatedUser)
+	if result.Error != nil {
+		return nil, fmt.Errorf("error creating user")
+	}
+	return &updatedUser, nil
 }

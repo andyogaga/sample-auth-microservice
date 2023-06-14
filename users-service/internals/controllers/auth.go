@@ -3,10 +3,10 @@ package controller
 import (
 	context "context"
 
-	"users-service/internals/datastruct"
 	dto "users-service/internals/dto"
 	proto "users-service/internals/proto"
 	services "users-service/internals/services"
+	"users-service/internals/utils"
 )
 
 const (
@@ -26,23 +26,26 @@ type UsersServer struct {
 }
 
 func (c *UsersServer) InitializeUser(ctx context.Context, req *proto.InitializeUserRequest) (*proto.InitializeUserResponse, error) {
-	createdProfile, err := profileService.CreateProfile(&dto.CreateProfile{Country: datastruct.Countries(req.Country)})
-	if err != nil {
-		return nil, err
-	}
-	initUser := dto.InitializeUser{Phone: req.Phone, ProfileId: createdProfile.ProfileId}
+	initUser := dto.InitializeUser{Phone: req.Phone, Country: req.Country}
 	user, err := userService.InitializeUser(&initUser)
 
 	if err != nil {
 		return nil, err
 	}
-	return &proto.InitializeUserResponse{Message: user.UserId}, nil
+	return &proto.InitializeUserResponse{UserId: user.UserId, Phone: user.Phone, Role: string(user.Role)}, nil
 }
 
 func (c *UsersServer) RegisterUser(ctx context.Context, req *proto.RegisterUserRequest) (*proto.RegisterUserResponse, error) {
-	return &proto.RegisterUserResponse{Message: "I am registered"}, nil
+	defer utils.RecoverFromPanic()
+	newUser := dto.RegisterUser{Phone: req.Phone, Email: &req.Email, Country: &req.Country, Password: &req.Password}
+	user, err := userService.RegisterUser(&newUser)
+
+	if err != nil {
+		return nil, err
+	}
+	return &proto.RegisterUserResponse{UserId: user.UserId, Phone: user.Phone, Role: string(user.Role), Email: user.Email}, nil
 }
 
 func (c *UsersServer) LoginUser(ctx context.Context, req *proto.LoginUserRequest) (*proto.LoginUserResponse, error) {
-	return &proto.LoginUserResponse{Message: "I am logged in"}, nil
+	return &proto.LoginUserResponse{UserId: "123", Phone: "234", Role: "user", Email: "a@b.com"}, nil
 }

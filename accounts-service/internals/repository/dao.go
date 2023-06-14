@@ -12,12 +12,12 @@ type DAO interface {
 	NewWalletQuery() WalletsQuery
 }
 
-var PostresDB *gorm.DB
+var PostgresDB *gorm.DB
 
 type dao struct{}
 
 func GetDB() *gorm.DB {
-	return PostresDB
+	return PostgresDB
 }
 
 func InitiatePostgresDatabase() (*dao, error) {
@@ -34,7 +34,7 @@ func InitiatePostgresDatabase() (*dao, error) {
 	fmt.Println(psqlInfo)
 	// "host=postgres user=dev password=dev dbname=dev port=5432 sslmode=disable"
 	var err error
-	PostresDB, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
+	PostgresDB, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}

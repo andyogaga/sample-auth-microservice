@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	constants "users-service/internals/constants"
 	controller "users-service/internals/controllers"
@@ -16,7 +17,7 @@ import (
 
 func main() {
 	fmt.Println("Starting the users server")
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(os.Getenv("SERVICE")); err != nil {
 		log.Fatalf("Error loading .env file: %s", err)
 	}
 	rabbitConn, err := events.ConnectToRabbitMQ()

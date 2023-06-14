@@ -13,12 +13,12 @@ type DAO interface {
 	NewProfileQuery() ProfilesQuery
 }
 
-var PostresDB *gorm.DB
+var PostgresDB *gorm.DB
 
 type dao struct{}
 
 func GetDB() *gorm.DB {
-	return PostresDB
+	return PostgresDB
 }
 
 func InitiatePostgresDatabase() (*dao, error) {
@@ -35,7 +35,7 @@ func InitiatePostgresDatabase() (*dao, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", postgresHost, postgresPort, postgresUser, postgresDatabaseName, postgresPassword)
 
 	var err error
-	PostresDB, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
+	PostgresDB, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}

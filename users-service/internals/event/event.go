@@ -7,8 +7,6 @@ import (
 	"os"
 	"time"
 
-	constants "users-service/internals/constants"
-
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
@@ -23,19 +21,19 @@ const (
 )
 
 type Payload struct {
-	Name    MessageName        `json:"name"`
-	Service constants.Services `json:"service"`
-	Data    interface{}        `json:"data"`
+	Name    MessageName `json:"name"`
+	Service string      `json:"service"`
+	Data    interface{} `json:"data"`
 }
 
 type Config struct {
 	Rabbit *amqp.Connection
-	topic  constants.Services
+	topic  string
 }
 
 var config Config
 
-func NewRabbitMQConfig(conn *amqp.Connection, topic constants.Services) Config {
+func NewRabbitMQConfig(conn *amqp.Connection, topic string) Config {
 	_, err := NewEventEmitter(conn)
 	if err != nil {
 		panic("Error connecting to rabbitmq emitter")

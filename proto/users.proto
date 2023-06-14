@@ -10,7 +10,9 @@ message InitializeUserRequest {
 }
 
 message InitializeUserResponse {
-    string Message = 1;
+    string Phone = 1;
+    string Role = 4;
+    string UserId = 5;
 }
 
 message RegisterUserRequest {
@@ -21,7 +23,10 @@ message RegisterUserRequest {
 }
 
 message RegisterUserResponse {
-    string Message = 1;
+    string Phone = 1;
+    string Email = 3;
+    string Role = 4;
+    string UserId = 5;
 }
 
 message LoginUserRequest {
@@ -30,8 +35,11 @@ message LoginUserRequest {
     string Password = 3;
 }
 
-message LoginUserResponse {
-    string Message = 1;
+message LoginUserResponse {    
+    string Phone = 1;
+    string Email = 3;
+    string Role = 4;
+    string UserId = 5;
 }
 
 service UserService {

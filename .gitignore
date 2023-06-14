@@ -20,3 +20,8 @@ broker-service/dist
 listener-service/dist
 users-service/dist
 *.DS_Store
+
+broker-service/.env.local
+users-service/.env.local
+listener-service/.env.local
+accounts-service/.env.local

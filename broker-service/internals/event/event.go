@@ -3,11 +3,11 @@ package event
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"math"
 	"os"
 	"time"
 
-	constants "broker-service/internals/constants"
 	requests "broker-service/internals/proto"
 
 	amqp "github.com/rabbitmq/amqp091-go"
@@ -28,19 +28,19 @@ type CustomData interface {
 }
 
 type Payload struct {
-	Name    MessageName        `json:"name"`
-	Service constants.Services `json:"service"`
-	Data    any                `json:"data"`
+	Name    MessageName `json:"name"`
+	Service string      `json:"service"`
+	Data    any         `json:"data"`
 }
 
 type Config struct {
 	Rabbit *amqp.Connection
-	topic  constants.Services
+	topic  string
 }
 
 var config Config
 
-func NewRabbitMQConfig(conn *amqp.Connection, topic constants.Services) Config {
+func NewRabbitMQConfig(conn *amqp.Connection, topic string) Config {
 	_, err := NewEventEmitter(conn)
 	if err != nil {
 		panic("Error connecting to rabbitmq emitter")
@@ -79,7 +79,7 @@ func ConnectToRabbitMQ() (*amqp.Connection, error) {
 	var backOff = 1 * time.Second
 	var connection *amqp.Connection
 	url := os.Getenv("RABBIT_MQ_URL")
-
+	log.Print(url)
 	for {
 		c, err := amqp.Dial(url)
 		if err != nil {

@@ -1,4 +1,7 @@
 
+SHELL := /bin/bash
+export
+
 ACCOUNTS_BINARY=accountsApp
 BROKER_BINARY=brokerApp
 LISTENER_BINARY=listenerApp
@@ -62,3 +65,16 @@ build_users:
 	@echo "Building users binary..."
 	cd ./users-service && go mod download && env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./dist/${USERS_BINARY} ./main.go
 	@echo "Done!"
+
+
+## ***********************************************************************************
+
+broker:
+	cd ./broker-service && go mod download && env SERVICE=.env.local go run main.go
+
+users:
+	cd ./users-service && go mod download && env SERVICE=.env.local go run main.go
+
+listener:
+	cd ./listener-service && go mod download && env SERVICE=.env.local go run main.go
+

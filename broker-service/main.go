@@ -15,7 +15,7 @@ import (
 
 func main() {
 	fmt.Println("Starting the broker service")
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(os.Getenv("SERVICE")); err != nil {
 		log.Fatalf("Error loading .env file: %s", err)
 	}
 	rabbitConn, err := events.ConnectToRabbitMQ()

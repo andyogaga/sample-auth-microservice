@@ -1,12 +1,14 @@
 package constants
 
+import "os"
+
 type Services string
 
-const (
-	USERS_SERVICE    Services = "users-service"
-	ACCOUNTS_SERVICE Services = "accounts-service"
-	LISTENER_SERVICE Services = "listener-service"
-	BROKER_SERVICE   Services = "broker-service"
+var (
+	USERS_SERVICE    = os.Getenv("USERS_SERVICE")
+	ACCOUNTS_SERVICE = os.Getenv("ACCOUNTS_SERVICE")
+	LISTENER_SERVICE = os.Getenv("LISTENER_SERVICE")
+	BROKER_SERVICE   = os.Getenv("BROKER_SERVICE")
 )
 
 const (

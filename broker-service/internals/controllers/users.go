@@ -1,12 +1,10 @@
 package controllers
 
 import (
-	"context"
-
 	"github.com/gofiber/fiber/v2"
-	"google.golang.org/grpc/metadata"
 
 	"broker-service/internals/constants"
+	"broker-service/internals/dto"
 	requests "broker-service/internals/proto"
 	router "broker-service/internals/router"
 	utils "broker-service/internals/utils"
@@ -16,6 +14,7 @@ func NewUserController(app *fiber.App) {
 
 	// User controllers
 	app.Post("/user/init", InitializeUser)
+	app.Post("/user/register", RegisterUser)
 }
 
 type ContextToken string
@@ -26,25 +25,42 @@ const (
 
 func InitializeUser(c *fiber.Ctx) error {
 	// Do Validations
-	client, conn, err := utils.UserRequestsViaGRPC(constants.USERS_SERVICE)
+	defer utils.RecoverFromPanic(c)
+	ctx, client, conn, req := router.SetupSynchronousRequest[dto.InitiateUser](c, constants.USERS_SERVICE)
 	defer conn.Close()
-	// recover logic
-	if err != nil {
-		return utils.RespondWithError(fiber.StatusInternalServerError, err, "Unexpected failure")
+	r := requests.InitializeUserRequest{
+		Phone:   req.Phone,
+		Country: req.Country,
 	}
-	var req requests.InitializeUserRequest
-	if err := c.BodyParser(&req); err != nil {
-		return utils.RespondWithError(fiber.StatusInternalServerError, err, "Unexpected failure")
-	}
-	token, err := router.GenerateToken(&req)
-	if err != nil {
-		return utils.RespondWithError(fiber.StatusInternalServerError, err, "Unexpected failure")
-	}
+	response, err := client.InitializeUser(ctx, &r)
 
-	ctx := metadata.AppendToOutgoingContext(context.Background(), "token", token)
-	response, err := client.InitializeUser(ctx, &req)
 	if err != nil {
-		return utils.RespondWithError(fiber.StatusInternalServerError, err, "Unexpected failure")
+		statusCode, msg := utils.HandleGRPCError(err)
+		return c.Status(statusCode).SendString(msg)
 	}
-	return utils.RespondWithJSON(fiber.StatusCreated, response)
+	return utils.RespondWithJSON(fiber.StatusCreated, response, nil)
+}
+
+func RegisterUser(c *fiber.Ctx) error {
+	// Do Validations
+	defer utils.RecoverFromPanic(c)
+
+	ctx, client, conn, req := router.SetupSynchronousRequest[dto.RegisterUser](c, (constants.USERS_SERVICE))
+	defer conn.Close()
+	r := requests.RegisterUserRequest{
+		Phone:    req.Phone,
+		Country:  req.Country,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+	response, err := client.RegisterUser(ctx, &r)
+	if err != nil {
+		statusCode, msg := utils.HandleGRPCError(err)
+		return c.Status(statusCode).SendString(msg)
+	}
+	token, err := router.GenerateToken(response)
+	if err != nil {
+		return utils.RespondWithError(fiber.StatusInternalServerError, err, "unexpected error")
+	}
+	return utils.RespondWithJSON(fiber.StatusCreated, response, &token)
 }

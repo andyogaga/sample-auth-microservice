@@ -13,7 +13,7 @@ type walletsQuery struct{}
 
 func (w *walletsQuery) GetWalletById(walletID uint64) (*datastruct.Wallet, error) {
 	walletModel := &datastruct.Wallet{ID: walletID}
-	wallet := PostresDB.Model(&datastruct.Wallet{}).First(&walletModel)
+	wallet := PostgresDB.Model(&datastruct.Wallet{}).First(&walletModel)
 
 	if wallet.Error != nil {
 		return &datastruct.Wallet{}, fmt.Errorf("cannot get a transaction %v", wallet.Error)

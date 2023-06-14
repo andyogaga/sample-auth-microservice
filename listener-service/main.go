@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	events "listener-service/event"
 
@@ -10,7 +11,7 @@ import (
 
 func main() {
 	// Connecting to rabbitmq
-	if err := godotenv.Load(); err != nil {
+	if err := godotenv.Load(os.Getenv("SERVICE")); err != nil {
 		log.Fatalf("Error loading .env file: %s", err)
 	}
 	rabbitConn, err := events.ConnectToRabbitMQ()

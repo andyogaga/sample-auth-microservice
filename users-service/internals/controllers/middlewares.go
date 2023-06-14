@@ -4,6 +4,7 @@ import (
 	context "context"
 	"crypto/rsa"
 	"fmt"
+	"log"
 	events "users-service/internals/event"
 
 	"github.com/golang-jwt/jwt"
@@ -48,6 +49,7 @@ func AuthorizationInterceptor(
 	token := md["token"][0]
 	publicKey, err := loadPublicKey()
 	if err != nil {
+		log.Print("error is", err.Error())
 		return nil, fmt.Errorf("error loading public key")
 	}
 	// Verify the authorization token using the public key
@@ -77,7 +79,6 @@ func LoggerInterceptor(messageQueueConfig *events.Config) grpc.UnaryServerInterc
 				Body:   req,
 			},
 		}
-		fmt.Print(payload)
 		messageQueueConfig.LogEventViaRabbit(&payload)
 
 		return handler(ctx, req)

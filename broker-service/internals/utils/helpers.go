@@ -2,20 +2,19 @@ package utils
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"broker-service/internals/constants"
+	"broker-service/internals/dto"
 	events "broker-service/internals/event"
 	requests "broker-service/internals/proto"
 )
-
-type ErrorResponse struct {
-	Error string `json:"error"`
-}
 
 var requestContext *fiber.Ctx
 
@@ -25,13 +24,56 @@ func SetupHttpServerInstance(c *fiber.Ctx) {
 
 // RespondWithError sends an error response with the specified status code and message.
 func RespondWithError(statusCode int, err error, message string) error {
-	response := ErrorResponse{Error: message}
-	return RespondWithJSON(statusCode, response)
+	response := fiber.Error{Message: message}
+	return requestContext.Status(statusCode).JSON(response)
 }
 
 // RespondWithJSON sends a JSON response with the specified status code and data.
-func RespondWithJSON[T any](statusCode int, data T) error {
+func RespondWithJSON[T any](statusCode int, data T, token *string) error {
+	response := dto.RequestResponse{
+		Message: "Successful",
+		Data:    data,
+	}
+	if token != nil {
+		response.Token = token
+	}
 	return requestContext.Status(statusCode).JSON(data)
+}
+
+func RecoverFromPanic(fibreCtx *fiber.Ctx) error {
+	if err := recover(); err != nil {
+		log.Println("Recovered error:", err)
+		e := err.(dto.ErrorMessage)
+		return fibreCtx.Status(e.Code).JSON(fiber.Map{
+			"status":  e.Code,
+			"message": e.Message,
+		})
+	}
+	return nil
+}
+
+func HandleGRPCError(err error) (int, string) {
+	var statusCode int
+	var msg string
+	if grpcErr, ok := status.FromError(err); ok {
+		switch grpcErr.Code() {
+		case codes.InvalidArgument:
+			statusCode = fiber.StatusBadRequest
+		case codes.Internal:
+			statusCode = fiber.StatusInternalServerError
+		case codes.AlreadyExists:
+			statusCode = fiber.StatusConflict
+		case codes.NotFound:
+			statusCode = fiber.StatusNotFound
+		default:
+			statusCode = fiber.StatusInternalServerError
+		}
+		msg = grpcErr.Message()
+	} else {
+		statusCode = fiber.StatusInternalServerError
+		msg = err.Error()
+	}
+	return statusCode, msg
 }
 
 func LogRequest(c *fiber.Ctx, event events.Config) {
@@ -56,9 +98,10 @@ func LogRequest(c *fiber.Ctx, event events.Config) {
 	event.LogEventViaRabbit(&payload)
 }
 
-func UserRequestsViaGRPC(service constants.Services) (requests.UserServiceClient, *grpc.ClientConn, error) {
-
-	conn, err := grpc.Dial(fmt.Sprintf("%s:%s", service, constants.GRPC_PORT), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+func UserRequestsViaGRPC(service string) (requests.UserServiceClient, *grpc.ClientConn, error) {
+	serverAddr := fmt.Sprintf("%s:%s", service, constants.GRPC_PORT)
+	log.Print("Dialing grpc server with ", serverAddr)
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return nil, nil, err
 	}
