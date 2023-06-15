@@ -5,6 +5,7 @@ import (
 
 	dto "users-service/internals/dto"
 	proto "users-service/internals/proto"
+	requests "users-service/internals/proto"
 	services "users-service/internals/services"
 	"users-service/internals/utils"
 )
@@ -37,15 +38,50 @@ func (c *UsersServer) InitializeUser(ctx context.Context, req *proto.InitializeU
 
 func (c *UsersServer) RegisterUser(ctx context.Context, req *proto.RegisterUserRequest) (*proto.RegisterUserResponse, error) {
 	defer utils.RecoverFromPanic()
-	newUser := dto.RegisterUser{Phone: req.Phone, Email: &req.Email, Country: &req.Country, Password: &req.Password}
+	newUser := dto.RegisterUser{Phone: req.Phone, Email: req.Email, Country: req.Country, Password: req.Password}
 	user, err := userService.RegisterUser(&newUser)
 
 	if err != nil {
 		return nil, err
 	}
-	return &proto.RegisterUserResponse{UserId: user.UserId, Phone: user.Phone, Role: string(user.Role), Email: user.Email}, nil
+	profile := requests.ProfileData{
+		ProfileId:   user.ProfileId,
+		Firstname:   user.Profile.Firstname,
+		Lastname:    user.Profile.Lastname,
+		Country:     string(user.Profile.Country),
+		DateOfBirth: user.Profile.DateOfBirth.String(),
+	}
+	return &proto.RegisterUserResponse{
+		UserId:   user.UserId,
+		Phone:    user.Phone,
+		Role:     string(user.Role),
+		Email:    user.Email,
+		Profile:  &profile,
+		Verified: user.Verified,
+	}, nil
 }
 
 func (c *UsersServer) LoginUser(ctx context.Context, req *proto.LoginUserRequest) (*proto.LoginUserResponse, error) {
-	return &proto.LoginUserResponse{UserId: "123", Phone: "234", Role: "user", Email: "a@b.com"}, nil
+	defer utils.RecoverFromPanic()
+	newUser := dto.LoginUser{Phone: req.Phone, Email: req.Email, Password: req.Password}
+	user, err := userService.LoginUser(&newUser)
+
+	if err != nil {
+		return nil, err
+	}
+	profile := requests.ProfileData{
+		ProfileId:   user.ProfileId,
+		Firstname:   user.Profile.Firstname,
+		Lastname:    user.Profile.Lastname,
+		Country:     string(user.Profile.Country),
+		DateOfBirth: user.Profile.DateOfBirth.String(),
+	}
+	return &proto.LoginUserResponse{
+		UserId:   user.UserId,
+		Phone:    user.Phone,
+		Role:     string(user.Role),
+		Email:    user.Email,
+		Verified: user.Verified,
+		Profile:  &profile,
+	}, nil
 }

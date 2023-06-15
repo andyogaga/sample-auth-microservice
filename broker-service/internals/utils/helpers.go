@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 
 	"broker-service/internals/constants"
@@ -29,15 +30,12 @@ func RespondWithError(statusCode int, err error, message string) error {
 }
 
 // RespondWithJSON sends a JSON response with the specified status code and data.
-func RespondWithJSON[T any](statusCode int, data T, token *string) error {
+func RespondWithJSON[T any](statusCode int, data T) error {
 	response := dto.RequestResponse{
 		Message: "Successful",
 		Data:    data,
 	}
-	if token != nil {
-		response.Token = token
-	}
-	return requestContext.Status(statusCode).JSON(data)
+	return requestContext.Status(statusCode).JSON(response)
 }
 
 func RecoverFromPanic(fibreCtx *fiber.Ctx) error {
@@ -63,6 +61,8 @@ func HandleGRPCError(err error) (int, string) {
 			statusCode = fiber.StatusInternalServerError
 		case codes.AlreadyExists:
 			statusCode = fiber.StatusConflict
+		case codes.PermissionDenied:
+			statusCode = fiber.StatusForbidden
 		case codes.NotFound:
 			statusCode = fiber.StatusNotFound
 		default:
@@ -100,8 +100,7 @@ func LogRequest(c *fiber.Ctx, event events.Config) {
 
 func UserRequestsViaGRPC(service string) (requests.UserServiceClient, *grpc.ClientConn, error) {
 	serverAddr := fmt.Sprintf("%s:%s", service, constants.GRPC_PORT)
-	log.Print("Dialing grpc server with ", serverAddr)
-	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
 		return nil, nil, err
 	}

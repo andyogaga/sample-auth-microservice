@@ -15,6 +15,7 @@ func NewUserController(app *fiber.App) {
 	// User controllers
 	app.Post("/user/init", InitializeUser)
 	app.Post("/user/register", RegisterUser)
+	app.Post("/user/login", LoginUser)
 }
 
 type ContextToken string
@@ -38,7 +39,7 @@ func InitializeUser(c *fiber.Ctx) error {
 		statusCode, msg := utils.HandleGRPCError(err)
 		return c.Status(statusCode).SendString(msg)
 	}
-	return utils.RespondWithJSON(fiber.StatusCreated, response, nil)
+	return utils.RespondWithJSON(fiber.StatusCreated, response)
 }
 
 func RegisterUser(c *fiber.Ctx) error {
@@ -53,14 +54,46 @@ func RegisterUser(c *fiber.Ctx) error {
 		Email:    req.Email,
 		Password: req.Password,
 	}
-	response, err := client.RegisterUser(ctx, &r)
+	result, err := client.RegisterUser(ctx, &r)
 	if err != nil {
 		statusCode, msg := utils.HandleGRPCError(err)
 		return c.Status(statusCode).SendString(msg)
 	}
-	token, err := router.GenerateToken(response)
+	token, err := router.GenerateToken(result)
 	if err != nil {
 		return utils.RespondWithError(fiber.StatusInternalServerError, err, "unexpected error")
 	}
-	return utils.RespondWithJSON(fiber.StatusCreated, response, &token)
+
+	response := dto.RegisterUserResponse[requests.RegisterUserResponse]{
+		Token: token,
+		User:  result,
+	}
+	return utils.RespondWithJSON(fiber.StatusCreated, response)
+}
+
+func LoginUser(c *fiber.Ctx) error {
+	// Do Validations
+	defer utils.RecoverFromPanic(c)
+
+	ctx, client, conn, req := router.SetupSynchronousRequest[dto.LoginUserRequest](c, (constants.USERS_SERVICE))
+	defer conn.Close()
+	r := requests.LoginUserRequest{
+		Phone:    req.Phone,
+		Email:    req.Email,
+		Password: req.Password,
+	}
+	result, err := client.LoginUser(ctx, &r)
+	if err != nil {
+		statusCode, msg := utils.HandleGRPCError(err)
+		return c.Status(statusCode).SendString(msg)
+	}
+	token, err := router.GenerateToken(result)
+	if err != nil {
+		return utils.RespondWithError(fiber.StatusInternalServerError, err, "unexpected error")
+	}
+	response := dto.RegisterUserResponse[requests.LoginUserResponse]{
+		Token: token,
+		User:  result,
+	}
+	return utils.RespondWithJSON(fiber.StatusCreated, response)
 }

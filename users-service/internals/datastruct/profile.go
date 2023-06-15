@@ -10,11 +10,11 @@ const ProfileTableName = "profiles"
 
 type Profile struct {
 	gorm.Model
-	ProfileId   string     `gorm:"primaryKey,unique"`
-	Firstname   *string    `json:"firstName"`
-	Lastname    *string    `json:"lastName"`
-	DateOfBirth *time.Time `json:"dateOfBirth"`
-	Country     Countries  `json:"country"`
+	ProfileId   string    `gorm:"primaryKey,unique"`
+	Firstname   string    `json:"firstname"`
+	Lastname    string    `json:"lastname"`
+	DateOfBirth time.Time `json:"dateOfBirth"`
+	Country     Countries `json:"country"`
 }
 
 type Countries string

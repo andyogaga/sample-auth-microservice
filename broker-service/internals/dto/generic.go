@@ -8,5 +8,4 @@ type ErrorMessage struct {
 type RequestResponse struct {
 	Message string      `json:"message"`
 	Data    interface{} `json:"data"`
-	Token   *string     `json:"token"`
 }

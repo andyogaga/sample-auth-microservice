@@ -4,6 +4,14 @@ package requests;
 
 option go_package = "/requests";
 
+message ProfileData {
+    string Firstname = 1;
+    string Lastname = 2;
+    string Country = 3;
+    string DateOfBirth = 4;
+    string ProfileId = 5;
+}
+
 message InitializeUserRequest {
     string Phone = 1;
     string Country = 2;
@@ -11,8 +19,9 @@ message InitializeUserRequest {
 
 message InitializeUserResponse {
     string Phone = 1;
-    string Role = 4;
-    string UserId = 5;
+    string Role = 2;
+    string UserId = 3;
+    string Verified = 5;
 }
 
 message RegisterUserRequest {
@@ -24,9 +33,11 @@ message RegisterUserRequest {
 
 message RegisterUserResponse {
     string Phone = 1;
-    string Email = 3;
-    string Role = 4;
-    string UserId = 5;
+    string Email = 2;
+    string Role = 3;
+    string UserId = 4;
+    bool Verified = 5;
+    ProfileData Profile = 6;
 }
 
 message LoginUserRequest {
@@ -37,9 +48,11 @@ message LoginUserRequest {
 
 message LoginUserResponse {    
     string Phone = 1;
-    string Email = 3;
-    string Role = 4;
-    string UserId = 5;
+    string Email = 2;
+    string Role = 3;
+    string UserId = 4;
+    bool Verified = 5;
+    ProfileData Profile = 6;
 }
 
 service UserService {

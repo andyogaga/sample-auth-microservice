@@ -8,6 +8,7 @@ import (
 
 type ProfileService interface {
 	CreateProfile(profile *dto.CreateProfile) (*datastruct.Profile, error)
+	GetProfile(profileQuery *dto.GetProfileQuery) (*datastruct.Profile, error)
 }
 
 type profileService struct {
@@ -20,6 +21,14 @@ func NewProfileService(dao repository.DAO) ProfileService {
 
 func (p *profileService) CreateProfile(profile *dto.CreateProfile) (*datastruct.Profile, error) {
 	user, err := p.dao.NewProfileQuery().CreateProfile(profile)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (p *profileService) GetProfile(profile *dto.GetProfileQuery) (*datastruct.Profile, error) {
+	user, err := p.dao.NewProfileQuery().GetProfileById(profile.ProfileId)
 	if err != nil {
 		return nil, err
 	}

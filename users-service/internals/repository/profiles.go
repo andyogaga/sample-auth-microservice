@@ -16,11 +16,11 @@ type ProfilesQuery interface {
 type profilesQuery struct{}
 
 func (u *profilesQuery) GetProfileById(profileID string) (*datastruct.Profile, error) {
-	profileModel := datastruct.Profile{ProfileId: profileID}
-	profile := PostgresDB.Model(&datastruct.Profile{}).First(&profileModel)
+	var profileModel datastruct.Profile
+	profile := PostgresDB.Raw("SELECT * FROM profiles WHERE profiles.profile_id = ?", profileID).Scan(&profileModel)
 
 	if profile.Error != nil {
-		return &datastruct.Profile{}, fmt.Errorf("cannot get the profile %v", profile.Error)
+		return nil, fmt.Errorf("error pulling profile data")
 	}
 
 	return &profileModel, nil

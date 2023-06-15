@@ -36,8 +36,8 @@ func main() {
 	datastruct.MigrateProfiles(db)
 	datastruct.MigrateUsers(db)
 
-	usersService := services.NewUserService(dao)
 	profilesService := services.NewProfileService(dao)
+	usersService := services.NewUserService(dao, profilesService)
 	controller.SetupService(&usersService, &profilesService)
 	controller.SetupGRPCRequestsListener(&config)
 }
