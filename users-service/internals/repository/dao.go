@@ -2,50 +2,60 @@ package repository
 
 import (
 	"fmt"
-	"os"
+	"net/http"
+	"users-service/internals/utils"
 
 	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	gorm "gorm.io/gorm"
 )
 
 type DAO interface {
 	NewUserQuery() UsersQuery
-	NewProfileQuery() ProfilesQuery
+	NewProfileQuery() IProfilesQuery
+	BeginTransaction() *gorm.DB
 }
 
-var PostgresDB *gorm.DB
-
-type dao struct{}
-
-func GetDB() *gorm.DB {
-	return PostgresDB
+type dao struct {
+	PostgresDB *gorm.DB
 }
 
-func InitiatePostgresDatabase() (*dao, error) {
+type DBConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	DbName   string
+}
+
+type TGormOpen func(dialector gorm.Dialector, opts ...gorm.Option) (db *gorm.DB, err error)
+
+func InitiatePostgresDatabase(config *DBConfig, gormOpen TGormOpen) (*dao, error) {
 	fmt.Println("Setting up to connect to database")
-
-	postgresHost := os.Getenv("POSTGRES_HOST")
-	postgresPort := os.Getenv("POSTGRES_PORT")
-	postgresUser := os.Getenv("POSTGRES_USER")
-	postgresPassword := os.Getenv("POSTGRES_PASSWORD")
-	postgresDatabaseName := os.Getenv("POSTGRES_DATABASE_NAME")
-
 	// Starting a database
 	fmt.Println("Starting postgres database")
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", postgresHost, postgresPort, postgresUser, postgresDatabaseName, postgresPassword)
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable", config.Host, config.Port, config.User, config.DbName, config.Password)
 
-	var err error
-	PostgresDB, err = gorm.Open(postgres.Open(psqlInfo), &gorm.Config{})
+	PostgresDB, err := gormOpen(postgres.Open(psqlInfo), &gorm.Config{})
 	if err != nil {
-		return nil, err
+		return nil, utils.NewError(http.StatusInternalServerError, "unexpected error", err)
 	}
-	return &dao{}, nil
+	return &dao{
+		PostgresDB: PostgresDB,
+	}, nil
+}
+
+func (d *dao) BeginTransaction() *gorm.DB {
+	return d.PostgresDB.Begin()
 }
 
 func (d *dao) NewUserQuery() UsersQuery {
-	return &usersQuery{}
+	return &usersQuery{
+		PostgresDB: d.PostgresDB,
+	}
 }
 
-func (d *dao) NewProfileQuery() ProfilesQuery {
-	return &profilesQuery{}
+func (d *dao) NewProfileQuery() IProfilesQuery {
+	return &profilesQuery{
+		PostgresDB: d.PostgresDB,
+	}
 }

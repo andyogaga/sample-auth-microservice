@@ -13,12 +13,11 @@ type RegisterUser struct {
 }
 
 type UpdateUser struct {
-	UserId    string `json:"userId"`
-	Phone     string `json:"phone"`
-	ProfileId string `json:"profileId"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	Role      datastruct.Role
+	UserId   string `json:"userId"`
+	Phone    string `json:"phone"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+	Role     datastruct.Role
 }
 
 type GetUser struct {
@@ -34,8 +33,8 @@ type LoginUser struct {
 }
 
 type InitializeUser struct {
-	Phone   string `json:"phone"`
-	Country string `json:"country"`
+	Phone   string `json:"phone" validate:"min=10,max=13,required"`
+	Country string `json:"country" validate:"required"`
 }
 
 type CleanedUser struct {

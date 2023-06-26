@@ -2,10 +2,11 @@ package controller
 
 import (
 	context "context"
+	"fmt"
+	"net/http"
 
 	dto "users-service/internals/dto"
 	proto "users-service/internals/proto"
-	requests "users-service/internals/proto"
 	services "users-service/internals/services"
 	"users-service/internals/utils"
 )
@@ -14,21 +15,25 @@ const (
 	grpcPORT = "50002"
 )
 
-var userService services.UserService
-var profileService services.ProfileService
-
-func SetupService(_userService *services.UserService, _profileService *services.ProfileService) {
-	userService = *_userService
-	profileService = *_profileService
-}
-
 type UsersServer struct {
 	proto.UnimplementedUserServiceServer
+	userService services.IUserService
+}
+
+func SetupService(_userService *services.UserService) *UsersServer {
+	return &UsersServer{
+		userService: _userService,
+	}
 }
 
 func (c *UsersServer) InitializeUser(ctx context.Context, req *proto.InitializeUserRequest) (*proto.InitializeUserResponse, error) {
 	initUser := dto.InitializeUser{Phone: req.Phone, Country: req.Country}
-	user, err := userService.InitializeUser(&initUser)
+	errors := utils.ValidateStruct(&initUser)
+	if len(errors) > 0 {
+		return nil, utils.NewError(http.StatusBadRequest, "invalid parameters", fmt.Errorf("validation errors: %s", errors))
+
+	}
+	user, err := c.userService.InitializeUser(&initUser)
 
 	if err != nil {
 		return nil, err
@@ -39,12 +44,13 @@ func (c *UsersServer) InitializeUser(ctx context.Context, req *proto.InitializeU
 func (c *UsersServer) RegisterUser(ctx context.Context, req *proto.RegisterUserRequest) (*proto.RegisterUserResponse, error) {
 	defer utils.RecoverFromPanic()
 	newUser := dto.RegisterUser{Phone: req.Phone, Email: req.Email, Country: req.Country, Password: req.Password}
-	user, err := userService.RegisterUser(&newUser)
+	user, err := c.userService.RegisterUser(&newUser)
 
 	if err != nil {
+		utils.LogErrors(err)
 		return nil, err
 	}
-	profile := requests.ProfileData{
+	profile := proto.ProfileData{
 		ProfileId:   user.ProfileId,
 		Firstname:   user.Profile.Firstname,
 		Lastname:    user.Profile.Lastname,
@@ -64,12 +70,12 @@ func (c *UsersServer) RegisterUser(ctx context.Context, req *proto.RegisterUserR
 func (c *UsersServer) LoginUser(ctx context.Context, req *proto.LoginUserRequest) (*proto.LoginUserResponse, error) {
 	defer utils.RecoverFromPanic()
 	newUser := dto.LoginUser{Phone: req.Phone, Email: req.Email, Password: req.Password}
-	user, err := userService.LoginUser(&newUser)
+	user, err := c.userService.LoginUser(&newUser)
 
 	if err != nil {
 		return nil, err
 	}
-	profile := requests.ProfileData{
+	profile := proto.ProfileData{
 		ProfileId:   user.ProfileId,
 		Firstname:   user.Profile.Firstname,
 		Lastname:    user.Profile.Lastname,

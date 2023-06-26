@@ -1,53 +1,52 @@
 package services
 
 import (
-	"log"
-
+	"fmt"
+	"net/http"
 	"users-service/internals/datastruct"
 	"users-service/internals/dto"
 	"users-service/internals/repository"
 	"users-service/internals/utils"
 
 	"golang.org/x/crypto/bcrypt"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
-type UserService interface {
-	InitializeUser(user *dto.InitializeUser) (*dto.CleanedUser, error)
-	RegisterUser(user *dto.RegisterUser) (*dto.CleanedUser, error)
-	LoginUser(user *dto.LoginUser) (*dto.CleanedUser, error)
+type IUserService interface {
+	InitializeUser(*dto.InitializeUser) (*dto.CleanedUser, error)
+	RegisterUser(*dto.RegisterUser) (*dto.CleanedUser, error)
+	LoginUser(*dto.LoginUser) (*dto.CleanedUser, error)
+	GetUser(*dto.GetUser) (*dto.CleanedUser, error)
 }
 
-type userService struct {
+type UserService struct {
 	dao            repository.DAO
-	profileService ProfileService
+	profileService IProfileService
 }
 
-func NewUserService(dao repository.DAO, profileService ProfileService) UserService {
-	return &userService{
+func NewUserService(dao repository.DAO, profileService *profileService) *UserService {
+	return &UserService{
 		dao:            dao,
 		profileService: profileService,
 	}
 }
 
-func (u *userService) GetUser(userID string) (*dto.CleanedUser, error) {
-	user, err := u.dao.NewUserQuery().GetCleanedUser(&dto.GetUser{UserId: userID})
+func (u *UserService) GetUser(requestedUser *dto.GetUser) (*dto.CleanedUser, error) {
+	user, err := u.dao.NewUserQuery().GetCleanedUser(requestedUser)
 	if err != nil {
-		log.Printf("user isn't authorized %v", err)
 		return nil, err
 	}
 	return user, nil
 }
 
-func (u *userService) InitializeUser(user *dto.InitializeUser) (*dto.CleanedUser, error) {
+func (u *UserService) InitializeUser(user *dto.InitializeUser) (*dto.CleanedUser, error) {
 	defer utils.RecoverFromPanic()
-	dbUser, err := u.dao.NewUserQuery().GetCleanedUser(&dto.GetUser{Phone: user.Phone})
+	dbUser, err := u.GetUser(&dto.GetUser{Phone: user.Phone})
 	if dbUser != nil {
-		return nil, status.Errorf(codes.AlreadyExists, "user already exists")
+		return nil, fmt.Errorf("user already exists")
 	} else if err.Error() == "user not found" {
-		createdProfile, err := u.dao.NewProfileQuery().CreateProfile(&dto.CreateProfile{Country: datastruct.Countries(user.Country)})
+		createdProfile, err := u.profileService.CreateProfile(&dto.CreateProfile{Country: datastruct.Countries(user.Country)})
 		if err != nil {
+			utils.LogErrors(err)
 			return nil, err
 		}
 
@@ -63,22 +62,22 @@ func (u *userService) InitializeUser(user *dto.InitializeUser) (*dto.CleanedUser
 		}
 		return createdUser, nil
 	} else {
-		return nil, status.Errorf(codes.AlreadyExists, "error creating user")
+		return nil, err
 	}
 }
 
-func (u *userService) RegisterUser(user *dto.RegisterUser) (*dto.CleanedUser, error) {
+func (u *UserService) RegisterUser(user *dto.RegisterUser) (*dto.CleanedUser, error) {
 	defer utils.RecoverFromPanic()
 
-	dbUser, err := u.dao.NewUserQuery().GetCleanedUser(&dto.GetUser{Email: user.Email, Phone: user.Phone})
+	dbUser, err := u.GetUser(&dto.GetUser{Email: user.Email, Phone: user.Phone})
 
 	hashedPasswordByte, errEncrypt := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if errEncrypt != nil {
-		return nil, status.Error(codes.AlreadyExists, err.Error())
+		return nil, utils.NewError(http.StatusInternalServerError, "unexpected failure", errEncrypt)
 	}
 	hashPasswordStr := string(hashedPasswordByte)
 	if dbUser != nil && dbUser.Role == datastruct.LEAD {
-
+		tx := u.dao.BeginTransaction()
 		newUser := dto.UpdateUser{
 			Role:     datastruct.USER,
 			Password: hashPasswordStr,
@@ -88,36 +87,43 @@ func (u *userService) RegisterUser(user *dto.RegisterUser) (*dto.CleanedUser, er
 		}
 		profile, err := u.profileService.GetProfile(&dto.GetProfileQuery{ProfileId: dbUser.ProfileId})
 		if err != nil {
+			tx.Rollback()
 			return nil, err
 		}
 		dbUser.Profile = *profile
-		dbUser, e := u.dao.NewUserQuery().Update(&newUser)
-		if e != nil {
+		dbUser, err = u.dao.NewUserQuery().Update(&newUser)
+		if err != nil {
+			tx.Rollback()
 			return nil, err
 		}
+		tx.Commit()
 		return dbUser, nil
 	} else if err != nil && err.Error() == "user not found" {
-		createdProfile, e := u.dao.NewProfileQuery().CreateProfile(&dto.CreateProfile{Country: datastruct.Countries(user.Country)})
+		tx := u.dao.BeginTransaction()
+		createdProfile, e := u.profileService.CreateProfile(&dto.CreateProfile{Country: datastruct.Countries(user.Country)})
 		if e != nil {
-			return nil, err
+			tx.Rollback()
+			return nil, e
 		}
 		user.Password = hashPasswordStr
 		user.ProfileId = createdProfile.ProfileId
 		user.Role = datastruct.USER
 		dbUser, e = u.dao.NewUserQuery().Create(user)
 		if e != nil {
+			tx.Rollback()
 			return nil, err
 		}
 		dbUser.Profile = *createdProfile
+		tx.Commit()
 		return dbUser, nil
 	} else if dbUser != nil && dbUser.Role != datastruct.LEAD {
-		return nil, status.Error(codes.AlreadyExists, "user already exists")
+		return nil, utils.NewError(http.StatusConflict, "user already exists", nil)
 	} else {
-		return nil, status.Error(codes.AlreadyExists, "error creating user")
+		return nil, utils.NewError(http.StatusInternalServerError, "error creating user", nil)
 	}
 }
 
-func (u *userService) LoginUser(user *dto.LoginUser) (*dto.CleanedUser, error) {
+func (u *UserService) LoginUser(user *dto.LoginUser) (*dto.CleanedUser, error) {
 	defer utils.RecoverFromPanic()
 
 	dbUser, err := u.dao.NewUserQuery().GetSensitiveUser(&dto.GetUser{Email: user.Email, Phone: user.Phone})
@@ -125,11 +131,11 @@ func (u *userService) LoginUser(user *dto.LoginUser) (*dto.CleanedUser, error) {
 		return nil, err
 	}
 	if dbUser != nil && (dbUser.Role == datastruct.LEAD) {
-		return nil, status.Error(codes.PermissionDenied, "user not fully registered, visit https://kendi.io/register to complete your registration")
+		return nil, utils.NewError(http.StatusUnauthorized, "user not fully registered, visit https://kendi.io/register to complete your registration", nil)
 	} else {
 		errEncrypt := bcrypt.CompareHashAndPassword([]byte(dbUser.Password), []byte(user.Password))
 		if errEncrypt != nil {
-			return nil, status.Error(codes.PermissionDenied, "incorrect login details")
+			return nil, utils.NewError(http.StatusUnauthorized, "incorrect login details", nil)
 		}
 		profile, err := u.profileService.GetProfile(&dto.GetProfileQuery{ProfileId: dbUser.ProfileId})
 		if err != nil {

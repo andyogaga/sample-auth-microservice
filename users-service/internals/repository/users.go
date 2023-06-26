@@ -5,6 +5,8 @@ import (
 	datastruct "users-service/internals/datastruct"
 	dto "users-service/internals/dto"
 	utils "users-service/internals/utils"
+
+	gorm "gorm.io/gorm"
 )
 
 type UsersQuery interface {
@@ -20,29 +22,31 @@ const (
 	USER_ID = "user_id"
 )
 
-type usersQuery struct{}
+type usersQuery struct {
+	PostgresDB *gorm.DB
+}
 
-func getUserById(userID string) (*datastruct.User, error) {
+func (u *usersQuery) getUserById(userID string) (*datastruct.User, error) {
 	var userModel datastruct.User
-	user := PostgresDB.Raw("SELECT * FROM users WHERE users.user_id = LIMIT 1 ?", userID).Scan(&userModel)
+	user := u.PostgresDB.Raw("SELECT * FROM users WHERE users.user_id = ? LIMIT 1", userID).Scan(&userModel)
 	if user.Error != nil || user.RowsAffected == 0 {
 		return nil, fmt.Errorf("user not found")
 	}
 	return &userModel, nil
 }
 
-func getUserByEmail(email string) (*datastruct.User, error) {
+func (u *usersQuery) getUserByEmail(email string) (*datastruct.User, error) {
 	var userModel datastruct.User
-	user := PostgresDB.Raw("SELECT * FROM users WHERE users.email = ? LIMIT 1", email).Scan(&userModel)
+	user := u.PostgresDB.Raw("SELECT * FROM users WHERE users.email = ? LIMIT 1", email).Scan(&userModel)
 	if user.Error != nil || user.RowsAffected == 0 {
 		return nil, fmt.Errorf("user not found")
 	}
 	return &userModel, nil
 }
 
-func getUserByPhone(phone string) (*datastruct.User, error) {
+func (u *usersQuery) getUserByPhone(phone string) (*datastruct.User, error) {
 	var userModel datastruct.User
-	user := PostgresDB.Raw("SELECT * FROM users WHERE users.phone = ? LIMIT 1", phone).Scan(&userModel)
+	user := u.PostgresDB.Raw("SELECT * FROM users WHERE users.phone = ? LIMIT 1", phone).Scan(&userModel)
 	if user.Error != nil || user.RowsAffected == 0 {
 		return nil, fmt.Errorf("user not found")
 	}
@@ -50,14 +54,14 @@ func getUserByPhone(phone string) (*datastruct.User, error) {
 }
 
 func (u *usersQuery) GetSensitiveUser(user *dto.GetUser) (*datastruct.User, error) {
+	if user.Phone != "" {
+		return u.getUserByPhone(user.Phone)
+	}
 	if user.UserId != "" {
-		return getUserById(user.UserId)
+		return u.getUserById(user.UserId)
 	}
 	if user.Email != "" {
-		return getUserByEmail(user.Email)
-	}
-	if user.Phone != "" {
-		return getUserByPhone(user.Phone)
+		return u.getUserByEmail(user.Email)
 	}
 	return nil, fmt.Errorf("user not found")
 }
@@ -88,7 +92,7 @@ func (u *usersQuery) Create(initUser *dto.RegisterUser) (*dto.CleanedUser, error
 		Role:      initUser.Role,
 		Password:  initUser.Password,
 	}
-	result := PostgresDB.Create(&user)
+	result := u.PostgresDB.Create(&user)
 
 	if result.Error != nil {
 		return nil, fmt.Errorf("error creating user")
@@ -105,18 +109,36 @@ func (u *usersQuery) Create(initUser *dto.RegisterUser) (*dto.CleanedUser, error
 }
 
 func (u *usersQuery) Update(user *dto.UpdateUser) (*dto.CleanedUser, error) {
-	updatedUser := datastruct.User{UserId: user.UserId}
-	result := PostgresDB.Save(*user).First(&updatedUser)
+	dbUser, err := u.GetSensitiveUser(&dto.GetUser{UserId: user.UserId})
+	if err != nil {
+		utils.LogErrors(err)
+		return nil, fmt.Errorf("error updating user")
+	}
+	if user.Email != "" {
+		dbUser.Email = user.Email
+	}
+	if user.Phone != "" {
+		dbUser.Phone = user.Phone
+	}
+	if user.Role != "" {
+		dbUser.Role = user.Role
+	}
+	if user.Password != "" {
+		dbUser.Password = user.Password
+	}
+
+	result := u.PostgresDB.Save(dbUser)
 	if result.Error != nil {
-		return nil, fmt.Errorf("error creating user")
+		utils.LogErrors(result.Error)
+		return nil, fmt.Errorf("error updating user")
 	}
 	cleanUser := dto.CleanedUser{
-		UserId:    updatedUser.UserId,
-		Phone:     updatedUser.Phone,
-		ProfileId: updatedUser.ProfileId,
-		Email:     updatedUser.Email,
-		Profile:   updatedUser.Profile,
-		Role:      updatedUser.Role,
+		UserId:    dbUser.UserId,
+		Phone:     dbUser.Phone,
+		ProfileId: dbUser.ProfileId,
+		Email:     dbUser.Email,
+		Profile:   dbUser.Profile,
+		Role:      dbUser.Role,
 	}
 	return &cleanUser, nil
 }

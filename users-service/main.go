@@ -13,6 +13,7 @@ import (
 	services "users-service/internals/services"
 
 	"github.com/joho/godotenv"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -27,17 +28,24 @@ func main() {
 	defer rabbitConn.Close()
 	config := events.NewRabbitMQConfig(rabbitConn, constants.USERS_SERVICE)
 
-	dao, err := repository.InitiatePostgresDatabase()
+	dbConfig := repository.DBConfig{
+		Host:     os.Getenv("POSTGRES_HOST"),
+		Port:     os.Getenv("POSTGRES_PORT"),
+		User:     os.Getenv("POSTGRES_USER"),
+		Password: os.Getenv("POSTGRES_PASSWORD"),
+		DbName:   os.Getenv("POSTGRES_DATABASE_NAME"),
+	}
+
+	dao, err := repository.InitiatePostgresDatabase(&dbConfig, gorm.Open)
 	if err != nil {
 		log.Fatal("Encountered error connecting to users postgres database")
 	}
 
-	db := repository.GetDB()
-	datastruct.MigrateProfiles(db)
-	datastruct.MigrateUsers(db)
+	datastruct.MigrateProfiles(dao.PostgresDB)
+	datastruct.MigrateUsers(dao.PostgresDB)
 
 	profilesService := services.NewProfileService(dao)
 	usersService := services.NewUserService(dao, profilesService)
-	controller.SetupService(&usersService, &profilesService)
-	controller.SetupGRPCRequestsListener(&config)
+	server := controller.SetupService(usersService)
+	controller.SetupGRPCRequestsListener(&config, server)
 }

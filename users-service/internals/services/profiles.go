@@ -6,7 +6,7 @@ import (
 	"users-service/internals/repository"
 )
 
-type ProfileService interface {
+type IProfileService interface {
 	CreateProfile(profile *dto.CreateProfile) (*datastruct.Profile, error)
 	GetProfile(profileQuery *dto.GetProfileQuery) (*datastruct.Profile, error)
 }
@@ -15,7 +15,7 @@ type profileService struct {
 	dao repository.DAO
 }
 
-func NewProfileService(dao repository.DAO) ProfileService {
+func NewProfileService(dao repository.DAO) *profileService {
 	return &profileService{dao: dao}
 }
 

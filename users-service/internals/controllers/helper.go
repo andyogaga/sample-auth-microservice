@@ -14,14 +14,16 @@ import (
 	"google.golang.org/grpc"
 )
 
-func SetupGRPCRequestsListener(messageQueueConfig *events.Config) {
+func SetupGRPCRequestsListener(messageQueueConfig *events.Config, userService *UsersServer) {
 	listenAddr := fmt.Sprintf("localhost:%s", grpcPORT)
 	lis, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(LoggerInterceptor(messageQueueConfig), AuthorizationInterceptor))
-	proto.RegisterUserServiceServer(grpcServer, &UsersServer{})
+	proto.RegisterUserServiceServer(grpcServer, &UsersServer{
+		userService: userService.userService,
+	})
 
 	log.Printf("gRPC Server started on: %s", listenAddr)
 	if err := grpcServer.Serve(lis); err != nil {
