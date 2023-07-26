@@ -2,9 +2,11 @@ package utils
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/go-playground/validator"
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type CustomError struct {
@@ -59,6 +61,14 @@ func ValidateStruct[T any](value *T) []ErrorResponse {
 		}
 	}
 	return errors
+}
+
+func EncryptPassword(password string) (string, error) {
+	hashedPasswordByte, errEncrypt := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if errEncrypt != nil {
+		return "", NewError(http.StatusInternalServerError, "unexpected failure", errEncrypt)
+	}
+	return string(hashedPasswordByte), nil
 }
 
 func LogErrors(err error) {

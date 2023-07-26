@@ -47,5 +47,6 @@ func main() {
 	profilesService := services.NewProfileService(dao)
 	usersService := services.NewUserService(dao, profilesService)
 	server := controller.SetupService(usersService)
-	controller.SetupGRPCRequestsListener(&config, server)
+	go controller.SetupGRPCRequestsListener(&config, server)
+	fmt.Println("users service started successfully")
 }

@@ -91,6 +91,7 @@ func (u *usersQuery) Create(initUser *dto.RegisterUser) (*dto.CleanedUser, error
 		Email:     initUser.Email,
 		Role:      initUser.Role,
 		Password:  initUser.Password,
+		PIN:       initUser.PIN,
 	}
 	result := u.PostgresDB.Create(&user)
 
@@ -125,6 +126,9 @@ func (u *usersQuery) Update(user *dto.UpdateUser) (*dto.CleanedUser, error) {
 	}
 	if user.Password != "" {
 		dbUser.Password = user.Password
+	}
+	if user.PIN != "" {
+		dbUser.PIN = user.PIN
 	}
 
 	result := u.PostgresDB.Save(dbUser)

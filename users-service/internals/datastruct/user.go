@@ -16,6 +16,7 @@ type User struct {
 	ProfileId string  `json:"profileId" gorm:"default:null"`
 	Profile   Profile `gorm:"foreignKey:ProfileId"`
 	Password  string
+	PIN       string
 }
 
 type Role string

@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+package requests;
+
+option go_package = "/requests";
+
+message Transaction {
+    string Data = 1;
+    string To = 2;
+    string From = 3;
+    string Value = 4;
+}
+
+message Address {
+    string Address = 1;
+    string Balance = 2;
+    string Token = 3;
+    string Network = 4;
+    string Wallet = 5;
+}
+
+message CreateWalletRequest {
+    string UserId = 1;
+    string PIN = 2;
+    string WalletName = 3;
+    string Description = 4;
+    string Seed = 5;
+}
+
+message CreateWalletResponse {
+    string UserId = 1;
+    string WalletName = 2;
+    string Description = 3;
+    repeated Address structs = 4;
+    string WalletId = 5;
+}
+
+
+service CryptoService {
+    rpc CreateWallet(CreateWalletRequest) returns (CreateWalletResponse);
+}

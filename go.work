@@ -3,6 +3,7 @@ go 1.18
 use (
 	./accounts-service
 	./broker-service
+	./crypto-service
 	./listener-service
 	./users-service
 )

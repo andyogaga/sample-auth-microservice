@@ -21,9 +21,7 @@ func SetupGRPCRequestsListener(messageQueueConfig *events.Config, userService *U
 		log.Fatalf("failed to listen: %v", err)
 	}
 	grpcServer := grpc.NewServer(grpc.ChainUnaryInterceptor(LoggerInterceptor(messageQueueConfig), AuthorizationInterceptor))
-	proto.RegisterUserServiceServer(grpcServer, &UsersServer{
-		userService: userService.userService,
-	})
+	proto.RegisterUserServiceServer(grpcServer, userService)
 
 	log.Printf("gRPC Server started on: %s", listenAddr)
 	if err := grpcServer.Serve(lis); err != nil {

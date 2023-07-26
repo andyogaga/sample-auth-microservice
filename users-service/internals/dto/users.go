@@ -9,6 +9,7 @@ type RegisterUser struct {
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 	Country   string
+	PIN       string
 	Role      datastruct.Role
 }
 
@@ -17,6 +18,7 @@ type UpdateUser struct {
 	Phone    string `json:"phone"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
+	PIN      string
 	Role     datastruct.Role
 }
 

@@ -37,9 +37,13 @@ build_keys:
 
 ## build_proto: builds the proto grpc files for all the neccessary services
 build_proto:
-	@echo "Building proto files..."
+	@echo "Building proto files for user service..."
 	cd ./proto && protoc --go_out=../users-service/internals/proto --go_opt=paths=source_relative --go-grpc_out=../users-service/internals/proto --go-grpc_opt=paths=source_relative users.proto
 	cd ./proto && protoc --go_out=../broker-service/internals/proto --go_opt=paths=source_relative --go-grpc_out=../broker-service/internals/proto --go-grpc_opt=paths=source_relative users.proto
+	@echo "Done!"
+	@echo "Building proto files for crypto service..."
+	cd ./proto && protoc --go_out=../crypto-service/internals/proto --go_opt=paths=source_relative --go-grpc_out=../crypto-service/internals/proto --go-grpc_opt=paths=source_relative crypto.proto
+	cd ./proto && protoc --go_out=../broker-service/internals/proto --go_opt=paths=source_relative --go-grpc_out=../broker-service/internals/proto --go-grpc_opt=paths=source_relative crypto.proto
 	@echo "Done!"
 
 ## build_broker: builds the broker binary as a linux executable

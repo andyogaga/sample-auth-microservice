@@ -70,12 +70,20 @@ func (u *UserService) RegisterUser(user *dto.RegisterUser) (*dto.CleanedUser, er
 	defer utils.RecoverFromPanic()
 
 	dbUser, err := u.GetUser(&dto.GetUser{Email: user.Email, Phone: user.Phone})
-
-	hashedPasswordByte, errEncrypt := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
-	if errEncrypt != nil {
-		return nil, utils.NewError(http.StatusInternalServerError, "unexpected failure", errEncrypt)
+	if err != nil {
+		return nil, err
 	}
-	hashPasswordStr := string(hashedPasswordByte)
+
+	hashPasswordStr, err := utils.EncryptPassword(user.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	hashedPINStr, err := utils.EncryptPassword(user.Password)
+	if err != nil {
+		return nil, err
+	}
+
 	if dbUser != nil && dbUser.Role == datastruct.LEAD {
 		tx := u.dao.BeginTransaction()
 		newUser := dto.UpdateUser{
@@ -84,6 +92,7 @@ func (u *UserService) RegisterUser(user *dto.RegisterUser) (*dto.CleanedUser, er
 			Phone:    user.Phone,
 			Email:    user.Email,
 			UserId:   dbUser.UserId,
+			PIN:      hashedPINStr,
 		}
 		profile, err := u.profileService.GetProfile(&dto.GetProfileQuery{ProfileId: dbUser.ProfileId})
 		if err != nil {
